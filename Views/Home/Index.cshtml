@@ -1,0 +1,136 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<link rel="stylesheet" href="~/css/site.css" />
+<script src="~/js/site.js"></script> 
+
+<div class="text-center">
+    <h2>Tarefas</h2>
+</div>
+
+    <div class="card">
+        <h3>Listagem tarefas</h3> 
+        <table class="table table-borderless" id="taskTable">
+            <tr>
+                <th>Código Tarefa</th>
+                <th>Nome Tarefa</th>
+                <th>Custo R$</th>
+                <th>Data Limite</th>
+                <th>Editar</th>
+                <th>Excluir</th>
+            </tr>
+            @foreach(var item in ViewBag.Lista)
+            {
+                <tr class="draggable @(Convert.ToDouble(item.Custo) >= 1000.00 ? "highlight" : "")">
+                    <td>@item.CodigoTarefa</td>
+                    <td>@item.NomeTarefa</td>
+                    <td>@item.Custo</td>
+                    <td>@item.DateLimite.ToString("dd/MM/yyyy")</td>
+                    <td><a href="javascript:void(0);" class="alterar-link" data-codigo="@item.CodigoTarefa" data-nome="@item.NomeTarefa" data-custo="@item.Custo" data-data="@item.DateLimite.ToString("yyyy-MM-dd")"><i class="fas fa-edit"></i></a></td>
+                    <td><a href="#" class="excluir-link" data-codigoTarefa="@item.CodigoTarefa"><i class="fas fa-trash-alt"></i></a></td>
+                </tr>
+            }
+        </table>
+        <br />
+        <div class="button-container">
+            <button type="button" id="btnInluirTarefa" onclick="window.location.href = '@Url.Action("Privacy", "Home")'">Incluir Tarefa</button>
+        </div>
+            
+    </div>
+
+@if (TempData["Mensagem"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Mensagem"]
+    </div>
+}
+
+@if (TempData["Erro"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["Erro"]
+    </div>
+}
+
+<div id="popup" class="popup">
+    @using (Html.BeginForm("AlterarTarefa", "Home", FormMethod.Post, new { id = "ProcessForm" }))
+    {
+        <div class="card">
+            <div class="lineinput">
+                <label>Código Tarefa</label>
+                <input type="text" id="codigoTarefa" name="codigoTarefa" value="" readonly />
+                <label>Nome da Tarefa</label>
+                <input type="text" id="nomeTarefa" name="nomeTarefa" placeholder="Nome da Tarefa" required />
+                <label>Custo R$</label>
+                <input type="text" id="valorcusto" name="valorcusto" placeholder="Custo da Tarefa Exemplo (325,00)" inputmode="numeric" pattern="[0-9]*([,][0-9]{0,2})?" required />
+                <label>Data limite</label>
+                <input type="date" id="dtLimite" name="dtLimite" placeholder="Data Limite da Tarefa" required/>
+            </div>
+
+            <div class="button-container">
+                <button type="submit" id="btnAlterar">Salvar Alteração</button>
+                <button type="button" id="btnLimpar" onclick="window.location.href = '@Url.Action("Index", "Home")'">Cancelar</button>
+            </div>
+        </div>
+    }
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var dragSrcEl = null;
+
+        function handleDragStart(e) {
+            dragSrcEl = this;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+            this.classList.add('dragged');
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            this.classList.add('over');
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            if (this !== dragSrcEl) {
+                this.classList.add('over');
+            }
+        }
+
+        function handleDragLeave() {
+            this.classList.remove('over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            if (dragSrcEl !== this) {
+                dragSrcEl.outerHTML = this.outerHTML;
+                this.outerHTML = e.dataTransfer.getData('text/html');
+            }
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('over');
+            this.classList.remove('dragged');
+        }
+
+        var cols = document.querySelectorAll('tr.draggable');
+        [].forEach.call(cols, function (col) {
+            col.addEventListener('dragstart', handleDragStart, false);
+            col.addEventListener('dragenter', handleDragEnter, false);
+            col.addEventListener('dragover', handleDragOver, false);
+            col.addEventListener('dragleave', handleDragLeave, false);
+            col.addEventListener('drop', handleDrop, false);
+            col.addEventListener('dragend', handleDragEnd, false);
+        });
+    });
+</script>
